@@ -1,0 +1,35 @@
+    # Add these three tasks into your existing pipeline.yaml,
+    # inside the "tasks:" list, after the "clone" task.
+
+    - name: npminstall
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: npm
+      runAfter:
+        - clone
+
+    - name: tests
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      taskRef:
+        name: jasmine
+      runAfter:
+        - npminstall
+
+    - name: build
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+        - name: dockerconfig
+          workspace: dockerconfig-ws
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: "us.icr.io/$(context.pipelineRun.namespace)/$(params.app-name)"
+      runAfter:
+        - tests
